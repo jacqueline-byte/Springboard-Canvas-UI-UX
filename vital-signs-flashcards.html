@@ -343,7 +343,7 @@
         <h3>Did this deck help you study?</h3>
         <div class="moods" role="radiogroup" aria-label="Did this deck help you study?">
           <button class="mood thumb" data-help="Yes" role="radio" aria-checked="false" aria-label="Thumbs up, yes">👍</button>
-          <button class="mood thumb" data-help="Not really" role="radio" aria-checked="false" aria-label="Thumbs down, not really">👎</button>
+          <button class="mood thumb" data-help="No" role="radio" aria-checked="false" aria-label="Thumbs down, no">👎</button>
         </div>
         <div class="fbk-row">
           <input id="fbkName" type="text" maxlength="80" placeholder="Your name" aria-label="Your name" autocomplete="name">
@@ -764,7 +764,7 @@ card.addEventListener("touchend",e=>{
 const FEEDBACK = {
   formAction: "https://docs.google.com/forms/d/e/1FAIpQLSf-DMpZXCLlGMzv76I6oLq4z3DA-RmJBtrDU55_F_P0W8uBQQ/formResponse",            // e.g. "https://docs.google.com/forms/d/e/XXXX/formResponse"
   fields: {                  // the Google Form's entry IDs, e.g. "entry.123456789"
-    name: "entry.1972710540", helped: "entry.1897717977", deck: "", score: ""
+    name: "entry.1972710540", helped: "entry.1897717977", deck: "entry.2055860775", cohort: "entry.347922585", score: ""
   }
 };
 (function(){
@@ -786,6 +786,7 @@ const FEEDBACK = {
     const data=new URLSearchParams();
     const put=(k,v)=>{ if(FEEDBACK.fields[k]) data.append(FEEDBACK.fields[k],v); };
     put("name",name); put("helped",helped); put("deck",DECK.title);
+    put("cohort", (new URLSearchParams(location.search).get("cohort")||"").trim().slice(0,80) || "Not set");
     put("score",`${known} of ${DECK.cards.length} got it`);
     $("fbkSend").disabled=true; msg.textContent="Sending…";
     try{

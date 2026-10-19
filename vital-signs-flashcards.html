@@ -184,6 +184,9 @@
   .start:hover{transform:translateY(-2px) scale(1.02)}
   .ghost{height:54px;padding:0 24px;border-radius:999px;font-weight:700;font-size:16px;background:var(--purple50);color:var(--purple)}
   .meta{font-size:14px;opacity:.7}
+  .resume{margin:0 0 6px;padding:14px 18px;border-radius:18px;background:var(--leaf50);box-shadow:inset 0 0 0 1px var(--leaf100);font-size:16px}
+  .resume b{font-weight:800;color:var(--blue)}
+  .resume[hidden],.row[hidden]{display:none}
   .score{display:flex;align-items:center;gap:28px;margin:26px 0 30px;flex-wrap:wrap}
   .ring{width:150px;height:150px;flex-shrink:0}
   .ring circle{fill:none;stroke-width:14}
@@ -193,6 +196,36 @@
   .tally span{display:inline-flex;align-items:center;gap:10px}
   .tally i{width:14px;height:14px;border-radius:5px;display:inline-block}
 
+
+  /* ---------- feedback on the finish screen ---------- */
+  #finish .panel{max-height:calc(100vh - 32px);overflow:auto}
+  .fbk{margin-top:22px;padding:16px 18px;border-radius:20px;background:var(--leaf50);box-shadow:inset 0 0 0 1px var(--leaf100)}
+  .fbk[hidden]{display:none}
+  .fbk h3{margin:0 0 10px;font-size:17px;font-weight:800}
+  .moods{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .mood{height:42px;padding:0 16px;border-radius:999px;background:#fff;color:var(--navy);font-weight:700;font-size:15px;box-shadow:inset 0 0 0 1.5px var(--gray);transition:all .2s}
+  .mood:hover{box-shadow:inset 0 0 0 1.5px var(--blue)}
+  .mood.on{background:var(--blue);color:#fff;box-shadow:none}
+  .fbk-row{display:flex;gap:8px;flex-wrap:wrap}
+  .fbk input,.fbk textarea{font:inherit;font-size:15px;color:var(--navy);border:0;border-radius:14px;padding:10px 14px;background:#fff;box-shadow:inset 0 0 0 1.5px var(--gray);outline:none}
+  .fbk input:focus,.fbk textarea:focus{box-shadow:inset 0 0 0 2px var(--blue)}
+  .fbk input{flex:1 1 180px;min-width:0}
+  .fbk textarea{width:100%;min-height:42px;height:42px;resize:vertical;margin-top:8px}
+  .fbk .send{height:42px;padding:0 22px;border-radius:999px;font-weight:800;font-size:15px;color:#fff;background:linear-gradient(135deg,#3A78FA,var(--blue) 60%,#3D3FD9)}
+  .fbk .send:disabled{opacity:.5;cursor:default}
+  .fbk-msg{margin:8px 0 0;font-size:13.5px;font-weight:700;min-height:18px}
+  .fbk-msg.err{color:var(--purple)}
+  .fbk-done{font-size:16px;font-weight:700}
+  /* compact finish screen so score + feedback fit without scrolling */
+  #finish .panel{padding:28px 32px 26px}
+  #finish .score{margin:12px 0 14px}
+  #finish .ring{width:112px;height:112px}
+  .fbk{margin-top:14px;padding:14px 16px}
+  .fbk h3{margin:0 0 8px;font-size:16px}
+  .moods{margin-bottom:10px}
+  .mood{height:38px;font-size:14.5px}
+  .fbk input,.fbk .send{height:40px}
+  .fbk textarea{margin-top:6px;min-height:40px;height:40px}
   .confetti{position:fixed;top:-20px;width:10px;height:16px;border-radius:3px;z-index:6;pointer-events:none;animation:fall linear forwards}
   @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
 
@@ -269,7 +302,14 @@
     <svg class="squiggle" viewBox="0 0 320 420" fill="none"><path d="M10 40 C 120 10, 240 0, 250 60 C 262 130, 60 150, 40 230 C 20 300, 200 320, 230 270 C 260 220, 120 190, 100 270 C 90 320, 110 360, 130 400" stroke="#0455F6" stroke-width="3" stroke-linecap="round"/></svg>
     <h1 id="introTitle"></h1>
     <span class="fc" id="introSub"></span>
-    <div class="row">
+    <div class="resume" id="resumeBox" hidden>
+      <b>Welcome back!</b> <span id="resumeText"></span>
+      <div class="row" style="margin-top:12px">
+        <button class="start" id="resumeBtn">Resume</button>
+        <button class="ghost" id="freshBtn">Start from the beginning</button>
+      </div>
+    </div>
+    <div class="row" id="startRow">
       <button class="start" id="startBtn">Start studying</button>
       <span class="meta" id="introMeta"></span>
     </div>
@@ -295,6 +335,29 @@
     <div class="row">
       <button class="start" id="reviewBtn">Review cards I'm still learning</button>
       <button class="ghost" id="againBtn">Study the whole deck</button>
+    </div>
+    <div class="fbk" id="fbk" hidden>
+      <div id="fbkForm">
+        <h3>How did you like this deck?</h3>
+        <div class="moods" role="radiogroup" aria-label="How did you like this deck?">
+          <button class="mood" data-mood="Loved it" role="radio" aria-checked="false">😍 Loved it</button>
+          <button class="mood" data-mood="It was okay" role="radio" aria-checked="false">🙂 It was okay</button>
+          <button class="mood" data-mood="Not for me" role="radio" aria-checked="false">😕 Not for me</button>
+        </div>
+        <h3>Did it help you study?</h3>
+        <div class="moods" id="helpGroup" role="radiogroup" aria-label="Did it help you study?">
+          <button class="mood help" data-help="Yes" role="radio" aria-checked="false">👍 Yes</button>
+          <button class="mood help" data-help="A little" role="radio" aria-checked="false">🤏 A little</button>
+          <button class="mood help" data-help="Not really" role="radio" aria-checked="false">👎 Not really</button>
+        </div>
+        <div class="fbk-row">
+          <input id="fbkName" type="text" maxlength="80" placeholder="Your name" aria-label="Your name" autocomplete="name">
+          <button class="send" id="fbkSend">Send</button>
+        </div>
+        <textarea id="fbkNote" maxlength="1000" placeholder="Anything else? (optional)" aria-label="Anything else? (optional)"></textarea>
+        <p class="fbk-msg" id="fbkMsg" aria-live="polite"></p>
+      </div>
+      <div class="fbk-done" id="fbkDone" hidden></div>
     </div>
   </div>
 </div>
@@ -466,6 +529,37 @@ const MOTIFS = [
 
 /* ---------- state ---------- */
 let order = [], pos = 0, status = {}, currentTheme = null;
+let deckMode = "all";
+
+/* ---------- remember where the student left off (this browser only) ----------
+   Cards are saved by a fingerprint of their content, not their number,
+   so adding/removing/reordering cards later still resumes on the right card. */
+const SAVE_KEY = "flashcards-progress:" + DECK.title;
+const cardId = c => { const str = JSON.stringify(c); let h = 0; for(let i=0;i<str.length;i++){ h = (h*31 + str.charCodeAt(i))|0; } return "c" + (h>>>0).toString(36); };
+const IDS = DECK.cards.map(cardId);
+function save(){
+  try{
+    if(!order.length) return;
+    const st = {}; Object.keys(status).forEach(k=>{ if(IDS[k]) st[IDS[k]] = status[k]; });
+    localStorage.setItem(SAVE_KEY, JSON.stringify({v:1, mode:deckMode, order:order.map(i=>IDS[i]), pos, status:st, t:Date.now()}));
+  }catch(e){}
+}
+function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+function loadSave(){
+  try{
+    const d = JSON.parse(localStorage.getItem(SAVE_KEY) || "null");
+    if(!d || d.v!==1 || !Array.isArray(d.order)) return null;
+    const idx = id => IDS.indexOf(id);
+    let ord = d.order.map(idx).filter(i=>i>=0);
+    if(d.mode!=="review") DECK.cards.forEach((_,i)=>{ if(!ord.includes(i)) ord.push(i); });   // new cards join the full deck
+    if(!ord.length) return null;
+    let p = ord.indexOf(idx(d.order[d.pos]));
+    if(p<0) p = Math.max(0, Math.min(d.pos||0, ord.length-1));
+    const st = {}; Object.entries(d.status||{}).forEach(([id,v])=>{ const i=idx(id); if(i>=0) st[i]=v; });
+    if(p===0 && !Object.keys(st).length) return null;                                       // nothing worth resuming
+    return {order:ord, pos:p, status:st, mode:d.mode==="review"?"review":"all"};
+  }catch(e){ return null; }
+}
 const $ = id => document.getElementById(id);
 const card = $("card");
 
@@ -527,6 +621,7 @@ function faceHTML(c, mode, idx){
 
 function render(dir){
   updateBadges();
+  setTimeout(save,0);
   const ci = order[pos], c = DECK.cards[ci];
   card.classList.remove("flipped");
   $("rate").classList.remove("show");
@@ -566,7 +661,7 @@ let rating=false;
 function rate(s){
   if(rating) return;                       // ignore double-clicks while a card is flying
   rating=true;
-  status[order[pos]]=s;
+  status[order[pos]]=s; save();
   const btn = s==="known" ? $("knowBtn") : $("learnBtn");
   const badge = s==="known" ? $("knowCountBadge") : $("learnCountBadge");
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -589,8 +684,8 @@ function rate(s){
   };
 }
 
-function start(list){
-  order = list; pos = 0;
+function start(list, mode, at){
+  order = list; pos = at || 0; deckMode = mode || "all";
   $("intro").classList.add("hide"); $("finish").classList.add("hide");
   $("topic").dataset.t="";
   render("next"); card.focus({preventScroll:true});
@@ -608,7 +703,8 @@ function finish(){
   $("knownCount").textContent = `Got it: ${known}`;
   $("learnCount").textContent = `Still learning: ${learning.length}`;
   $("reviewBtn").style.display = learning.length ? "" : "none";
-  $("reviewBtn").onclick = ()=>start(learning);
+  $("reviewBtn").onclick = ()=>start(learning,"review");
+  clearSave();
   $("finish").classList.remove("hide");
   $("ringVal").style.strokeDashoffset = 377;
   requestAnimationFrame(()=>requestAnimationFrame(()=>{ $("ringVal").style.strokeDashoffset = 377*(1-pct/100); }));
@@ -635,9 +731,16 @@ $("introSub").textContent = DECK.subtitle;
 $("introMeta").textContent = `${DECK.cards.length} cards`;
 setTheme(DECK.cards[0].theme);
 
-$("startBtn").onclick = ()=>start(all());
-$("againBtn").onclick = ()=>{ status={}; start(all()); };
-$("restartBtn").onclick = ()=>{ status={}; start(all()); };
+$("startBtn").onclick = ()=>start(all(),"all");
+$("againBtn").onclick = ()=>{ status={}; start(all(),"all"); };
+$("restartBtn").onclick = ()=>{ status={}; start(all(),"all"); };
+const saved = loadSave();
+if(saved){
+  $("resumeText").textContent = `Pick up at card ${saved.pos+1} of ${saved.order.length}?`;
+  $("resumeBox").hidden = false; $("startRow").hidden = true;
+  $("resumeBtn").onclick = ()=>{ status = saved.status; start(saved.order, saved.mode, saved.pos); };
+  $("freshBtn").onclick  = ()=>{ clearSave(); status = {}; start(all(),"all"); };
+}
 $("shuffleBtn").onclick = shuffle;
 $("flipBtn").onclick = flip;
 $("nextBtn").onclick = next;
@@ -660,6 +763,51 @@ card.addEventListener("touchend",e=>{
   if(sx===null) return; const dx=e.changedTouches[0].clientX-sx; sx=null;
   if(Math.abs(dx)>50){ e.preventDefault(); dx<0?next():prev(); }
 });
+
+/* ===================== FEEDBACK → Google Sheet =====================
+   Responses go to a Google Form (its responses tab / linked Sheet).
+   Until FEEDBACK.formAction is filled in, the feedback box stays hidden. */
+const FEEDBACK = {
+  formAction: "https://docs.google.com/forms/d/e/1FAIpQLSf-DMpZXCLlGMzv76I6oLq4z3DA-RmJBtrDU55_F_P0W8uBQQ/formResponse",            // e.g. "https://docs.google.com/forms/d/e/XXXX/formResponse"
+  fields: {                  // the Google Form's entry IDs, e.g. "entry.123456789"
+    name: "entry.1972710540", liked: "entry.876530478", helped: "entry.1897717977", comment: "entry.634152224", deck: "", score: ""
+  }
+};
+(function(){
+  const box=$("fbk"); if(!FEEDBACK.formAction || !FEEDBACK.fields.name || !FEEDBACK.fields.liked) return;
+  const SENT_KEY="flashcards-feedback-sent:"+DECK.title;
+  let mood="", helped="";
+  const pick=(list,b)=>{ list.forEach(x=>{ const on=x===b; x.classList.toggle("on",on); x.setAttribute("aria-checked",on); }); $("fbkMsg").textContent=""; };
+  const moods=[...box.querySelectorAll(".mood:not(.help)")], helps=[...box.querySelectorAll(".mood.help")];
+  moods.forEach(b=>b.onclick=()=>{ mood=b.dataset.mood; pick(moods,b); });
+  helps.forEach(b=>b.onclick=()=>{ helped=b.dataset.help; pick(helps,b); });
+  const showDone=name=>{ $("fbkForm").hidden=true; $("fbkDone").hidden=false; $("fbkDone").textContent = name ? `Thanks for your feedback, ${name}! 💙` : "Thanks for your feedback! 💙"; };
+  let sentBefore=false; try{ sentBefore=!!localStorage.getItem(SENT_KEY); }catch(e){}
+  if(sentBefore) showDone("");
+  box.hidden=false;
+  $("fbkSend").onclick=async()=>{
+    const name=$("fbkName").value.trim(), msg=$("fbkMsg");
+    msg.className="fbk-msg";
+    if(!mood){ msg.textContent="Pick how you liked the deck first."; msg.classList.add("err"); return; }
+    if(!helped){ msg.textContent="Let us know if it helped you study."; msg.classList.add("err"); return; }
+    if(!name){ msg.textContent="Please add your name."; msg.classList.add("err"); $("fbkName").focus(); return; }
+    const known=Object.values(status).filter(v=>v==="known").length;
+    const data=new URLSearchParams();
+    const put=(k,v)=>{ if(FEEDBACK.fields[k]) data.append(FEEDBACK.fields[k],v); };
+    put("name",name); put("liked",mood); put("helped",helped); put("comment",$("fbkNote").value.trim()); put("deck",DECK.title);
+    put("score",`${known} of ${DECK.cards.length} got it`);
+    $("fbkSend").disabled=true; msg.textContent="Sending…";
+    try{
+      await fetch(FEEDBACK.formAction,{method:"POST",mode:"no-cors",body:data});
+      try{ localStorage.setItem(SENT_KEY,"1"); }catch(e){}
+      showDone(name);
+    }catch(e){
+      msg.textContent="Couldn't send right now. Check your connection and try again."; msg.classList.add("err");
+      $("fbkSend").disabled=false;
+    }
+  };
+  $("fbkName").addEventListener("keydown",e=>{ if(e.key==="Enter") $("fbkSend").click(); });
+})();
 </script>
 </body>
 </html>

@@ -213,6 +213,8 @@
   .fbk textarea{width:100%;min-height:42px;height:42px;resize:vertical;margin-top:8px}
   .fbk .send{height:42px;padding:0 22px;border-radius:999px;font-weight:800;font-size:15px;color:#fff;background:linear-gradient(135deg,#3A78FA,var(--blue) 60%,#3D3FD9)}
   .fbk .send:disabled{opacity:.5;cursor:default}
+  .mood.thumb{width:64px;height:52px;padding:0;font-size:26px;border-radius:16px}
+  .mood.thumb.on{background:var(--leaf);box-shadow:inset 0 0 0 2px var(--navy)}
   .fbk-msg{margin:8px 0 0;font-size:13.5px;font-weight:700;min-height:18px}
   .fbk-msg.err{color:var(--purple)}
   .fbk-done{font-size:16px;font-weight:700}
@@ -338,23 +340,15 @@
     </div>
     <div class="fbk" id="fbk" hidden>
       <div id="fbkForm">
-        <h3>How did you like this deck?</h3>
-        <div class="moods" role="radiogroup" aria-label="How did you like this deck?">
-          <button class="mood" data-mood="Loved it" role="radio" aria-checked="false">😍 Loved it</button>
-          <button class="mood" data-mood="It was okay" role="radio" aria-checked="false">🙂 It was okay</button>
-          <button class="mood" data-mood="Not for me" role="radio" aria-checked="false">😕 Not for me</button>
-        </div>
-        <h3>Did it help you study?</h3>
-        <div class="moods" id="helpGroup" role="radiogroup" aria-label="Did it help you study?">
-          <button class="mood help" data-help="Yes" role="radio" aria-checked="false">👍 Yes</button>
-          <button class="mood help" data-help="A little" role="radio" aria-checked="false">🤏 A little</button>
-          <button class="mood help" data-help="Not really" role="radio" aria-checked="false">👎 Not really</button>
+        <h3>Did this deck help you study?</h3>
+        <div class="moods" role="radiogroup" aria-label="Did this deck help you study?">
+          <button class="mood thumb" data-help="Yes" role="radio" aria-checked="false" aria-label="Thumbs up, yes">👍</button>
+          <button class="mood thumb" data-help="Not really" role="radio" aria-checked="false" aria-label="Thumbs down, not really">👎</button>
         </div>
         <div class="fbk-row">
           <input id="fbkName" type="text" maxlength="80" placeholder="Your name" aria-label="Your name" autocomplete="name">
           <button class="send" id="fbkSend">Send</button>
         </div>
-        <textarea id="fbkNote" maxlength="1000" placeholder="Anything else? (optional)" aria-label="Anything else? (optional)"></textarea>
         <p class="fbk-msg" id="fbkMsg" aria-live="polite"></p>
       </div>
       <div class="fbk-done" id="fbkDone" hidden></div>
@@ -770,17 +764,15 @@ card.addEventListener("touchend",e=>{
 const FEEDBACK = {
   formAction: "https://docs.google.com/forms/d/e/1FAIpQLSf-DMpZXCLlGMzv76I6oLq4z3DA-RmJBtrDU55_F_P0W8uBQQ/formResponse",            // e.g. "https://docs.google.com/forms/d/e/XXXX/formResponse"
   fields: {                  // the Google Form's entry IDs, e.g. "entry.123456789"
-    name: "entry.1972710540", liked: "entry.876530478", helped: "entry.1897717977", comment: "entry.634152224", deck: "", score: ""
+    name: "entry.1972710540", helped: "entry.1897717977", deck: "", score: ""
   }
 };
 (function(){
-  const box=$("fbk"); if(!FEEDBACK.formAction || !FEEDBACK.fields.name || !FEEDBACK.fields.liked) return;
-  const SENT_KEY="flashcards-feedback-sent:"+DECK.title;
-  let mood="", helped="";
-  const pick=(list,b)=>{ list.forEach(x=>{ const on=x===b; x.classList.toggle("on",on); x.setAttribute("aria-checked",on); }); $("fbkMsg").textContent=""; };
-  const moods=[...box.querySelectorAll(".mood:not(.help)")], helps=[...box.querySelectorAll(".mood.help")];
-  moods.forEach(b=>b.onclick=()=>{ mood=b.dataset.mood; pick(moods,b); });
-  helps.forEach(b=>b.onclick=()=>{ helped=b.dataset.help; pick(helps,b); });
+  const box=$("fbk"); if(!FEEDBACK.formAction || !FEEDBACK.fields.name || !FEEDBACK.fields.helped) return;
+  const SENT_KEY="flashcards-thumbs-sent:"+DECK.title;
+  let helped="";
+  const thumbs=[...box.querySelectorAll(".mood.thumb")];
+  thumbs.forEach(b=>b.onclick=()=>{ helped=b.dataset.help; thumbs.forEach(x=>{ const on=x===b; x.classList.toggle("on",on); x.setAttribute("aria-checked",on); }); $("fbkMsg").textContent=""; });
   const showDone=name=>{ $("fbkForm").hidden=true; $("fbkDone").hidden=false; $("fbkDone").textContent = name ? `Thanks for your feedback, ${name}! 💙` : "Thanks for your feedback! 💙"; };
   let sentBefore=false; try{ sentBefore=!!localStorage.getItem(SENT_KEY); }catch(e){}
   if(sentBefore) showDone("");
@@ -788,13 +780,12 @@ const FEEDBACK = {
   $("fbkSend").onclick=async()=>{
     const name=$("fbkName").value.trim(), msg=$("fbkMsg");
     msg.className="fbk-msg";
-    if(!mood){ msg.textContent="Pick how you liked the deck first."; msg.classList.add("err"); return; }
-    if(!helped){ msg.textContent="Let us know if it helped you study."; msg.classList.add("err"); return; }
+    if(!helped){ msg.textContent="Tap 👍 or 👎 first."; msg.classList.add("err"); return; }
     if(!name){ msg.textContent="Please add your name."; msg.classList.add("err"); $("fbkName").focus(); return; }
     const known=Object.values(status).filter(v=>v==="known").length;
     const data=new URLSearchParams();
     const put=(k,v)=>{ if(FEEDBACK.fields[k]) data.append(FEEDBACK.fields[k],v); };
-    put("name",name); put("liked",mood); put("helped",helped); put("comment",$("fbkNote").value.trim()); put("deck",DECK.title);
+    put("name",name); put("helped",helped); put("deck",DECK.title);
     put("score",`${known} of ${DECK.cards.length} got it`);
     $("fbkSend").disabled=true; msg.textContent="Sending…";
     try{

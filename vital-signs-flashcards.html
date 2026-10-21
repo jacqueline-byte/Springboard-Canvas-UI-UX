@@ -775,8 +775,10 @@ const FEEDBACK = {
   thumbs.forEach(b=>b.onclick=()=>{ helped=b.dataset.help; thumbs.forEach(x=>{ const on=x===b; x.classList.toggle("on",on); x.setAttribute("aria-checked",on); }); $("fbkMsg").textContent=""; });
   const showDone=name=>{ $("fbkForm").hidden=true; $("fbkDone").hidden=false; $("fbkDone").textContent = name ? `Thanks for your feedback, ${name}! 💙` : "Thanks for your feedback! 💙"; };
   let sentBefore=false; try{ sentBefore=!!localStorage.getItem(SENT_KEY); }catch(e){}
-  if(sentBefore) showDone("");
+  if(sentBefore) return;            // already answered on an earlier visit: no feedback area at all
   box.hidden=false;
+  // after they've sent it, the thank-you only shows until they start the deck again
+  ["againBtn","reviewBtn","restartBtn"].forEach(id=>{ const b=$(id); if(b) b.addEventListener("click",()=>{ try{ if(localStorage.getItem(SENT_KEY)) box.hidden=true; }catch(e){} }); });
   $("fbkSend").onclick=async()=>{
     const name=$("fbkName").value.trim(), msg=$("fbkMsg");
     msg.className="fbk-msg";
